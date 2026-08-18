@@ -1,0 +1,27 @@
+node_modules/
+.next/
+out/
+build/
+dist/
+
+.env
+.env.local
+.env*.local
+
+next-env.d.ts
+*.tsbuildinfo
+
+# Eval run artefacts. Baselines under eval/baselines/ ARE committed — CI
+# compares each run against them.
+eval/runs/
+coverage/
+
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.ruff_cache/
