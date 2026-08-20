@@ -1,0 +1,74 @@
+[project]
+name = "atlas"
+version = "0.1.0"
+description = "Multi-tenant knowledge retrieval platform: permission-aware hybrid RAG with evaluation and observability."
+requires-python = ">=3.11"
+
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    # Direct Postgres rather than an ORM: the job queue needs
+    # SELECT ... FOR UPDATE SKIP LOCKED and the retrieval path calls a plpgsql
+    # function with a vector argument. Both are awkward through an ORM and
+    # trivial in SQL.
+    "asyncpg>=0.30.0",
+    # [email] pulls email-validator, which EmailStr on the auth routes needs.
+    "pydantic[email]>=2.9.0",
+    "pydantic-settings>=2.6.0",
+    "python-multipart>=0.0.12",
+    # Eval datasets are hand-written and reviewed in pull requests, which
+    # rules out JSON: no comments, and a trailing comma is a merge conflict.
+    "pyyaml>=6.0",
+    "httpx>=0.27.0",
+    # Provider SDKs. Which one is used is decided per model id at runtime.
+    "google-genai>=1.9.0",
+    "openai>=1.57.0",
+    "anthropic>=0.65.0",
+    # Parsers.
+    "pypdf>=5.1.0",
+    "python-docx>=1.1.2",
+]
+
+[project.scripts]
+# Three processes, three entrypoints. `uv run atlas-migrate` beats remembering
+# which directory a loose script has to be invoked from.
+atlas-api = "atlas.main:run"
+atlas-worker = "atlas.jobs.worker:run"
+atlas-migrate = "atlas.scripts.migrate:run"
+atlas-seed = "atlas.scripts.seed:run"
+atlas-eval = "atlas.scripts.eval:run"
+
+# PEP 735 rather than an optional-dependencies extra: `uv sync` installs this
+# group by default, so a fresh clone gets ruff and pytest with no flag, while
+# `uv sync --no-dev` gives a production image only what it needs.
+[dependency-groups]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "ruff>=0.8.0",
+    "mypy>=1.13.0",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["atlas*"]
+
+[tool.ruff]
+line-length = 90
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "ASYNC"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+# asyncpg and the provider SDKs ship partial or absent stubs.
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

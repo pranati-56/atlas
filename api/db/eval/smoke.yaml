@@ -1,0 +1,88 @@
+name: smoke
+description: >
+  A starter set for the seeded demo corpus. Small on purpose — twelve questions
+  will not settle an argument about alpha, and `compare` will tell you so. Its
+  job is to prove the harness runs end to end and to be the file you edit.
+
+# Ground truth here is written as document titles and source kinds, because
+# those are things a person can label. `atlas-eval import` resolves titles to
+# ids against your corpus and warns about the ones it cannot find — so expect
+# warnings until your own documents are ingested, and replace these with
+# whatever you actually indexed.
+#
+# The four difficulty values are not decoration. Each one is a different way
+# retrieval fails:
+#
+#   identifier-lookup  the dense channel is bad at rare tokens; this is where
+#                      the lexical channel earns its place
+#   multi-hop          one passage is not enough, so top_k and candidates matter
+#   temporal           the corpus contains an old answer and a newer one
+#   unanswerable       the correct behaviour is to abstain, and a system that
+#                      never abstains is a system that hallucinates on the tail
+
+questions:
+  - question: What did we decide about SSO session length?
+    expected_documents: ["Auth decisions"]
+    expected_sources: ["notion"]
+    must_include: ["12"]
+    tags: ["auth"]
+    difficulty: multi-hop
+
+  - question: Which services still call the deprecated /v1/auth endpoint?
+    expected_sources: ["github"]
+    must_include: ["/v1/auth"]
+    tags: ["auth", "code"]
+    difficulty: identifier-lookup
+
+  - question: What is SESSION_TTL_HOURS set to?
+    expected_documents: ["auth/config.py"]
+    expected_sources: ["github"]
+    must_include: ["12"]
+    tags: ["auth", "code"]
+    difficulty: identifier-lookup
+
+  - question: Why did checkout failures spike after v4.2?
+    expected_sources: ["github", "slack"]
+    must_include: ["retry"]
+    tags: ["incidents"]
+    difficulty: multi-hop
+
+  - question: What is the current severity policy for a P1 incident?
+    expected_sources: ["notion"]
+    tags: ["incidents", "policy"]
+    difficulty: temporal
+
+  - question: Who approved the eu-west deploy checklist?
+    expected_sources: ["slack"]
+    tags: ["deploys"]
+
+  - question: What is the retry budget for the payments gateway?
+    expected_sources: ["github"]
+    tags: ["payments", "code"]
+    difficulty: identifier-lookup
+
+  - question: Summarise the March incident review.
+    expected_documents: ["Auth decisions"]
+    expected_sources: ["notion"]
+    tags: ["incidents"]
+
+  - question: Which channel was the SSO rollout confirmed in?
+    expected_sources: ["slack"]
+    must_include: ["security"]
+    tags: ["auth"]
+
+  # Unanswerable: nothing in the corpus covers this, and the right answer is to
+  # say so. Note it carries no expected documents — import rejects a question
+  # that claims both.
+  - question: What is the CEO's home address?
+    must_not_include: ["street", "avenue"]
+    tags: ["safety"]
+    difficulty: unanswerable
+
+  - question: How many customers churned in Q3 of 2019?
+    tags: ["metrics"]
+    difficulty: unanswerable
+
+  - question: What is our policy on cryptocurrency payments?
+    tags: ["payments", "policy"]
+    difficulty: unanswerable
