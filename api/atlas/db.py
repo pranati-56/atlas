@@ -72,7 +72,10 @@ async def close_pool() -> None:
     if _pool is None:
         return
     p, _pool = _pool, None
-    await p.close()
+    try:
+        await p.close()
+    except Exception:
+        pass
 
 
 async def fetch(sql: str, *args: Any) -> list[asyncpg.Record]:

@@ -368,12 +368,15 @@ async def main(argv: list[str] | None = None) -> int:
         return 1
 
 
-def run() -> None:
-    code = 1
+async def _run() -> int:
     try:
-        code = asyncio.run(main())
+        return await main()
     finally:
-        asyncio.run(close_pool())
+        await close_pool()
+
+
+def run() -> None:
+    code = asyncio.run(_run())
     raise SystemExit(code)
 
 

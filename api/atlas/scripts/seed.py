@@ -78,14 +78,18 @@ async def main() -> int:
     return 0
 
 
-def run() -> None:
-    code = 1
+async def _run() -> int:
     try:
-        code = asyncio.run(main())
+        return await main()
     except Exception as exc:  # noqa: BLE001 — the message is the point
         print(f"seed failed: {exc}", file=sys.stderr)
+        return 1
     finally:
-        asyncio.run(close_pool())
+        await close_pool()
+
+
+def run() -> None:
+    code = asyncio.run(_run())
     raise SystemExit(code)
 
 
